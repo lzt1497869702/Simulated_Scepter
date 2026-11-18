@@ -11,7 +11,7 @@ from core.currency.affix_stats import AffixSampler
 from core.currency.envirs import ENVIR_NAMES
 from core.currency.textmatch import best_match, similar
 from core.currency.investment_selection import choose_fallback_investment
-from core.currency.strategies import exit_plane_for, match_name
+from core.currency.strategies import exit_plane_for, match_name, normalize_name
 from core.currency.strategy_stats import StrategySampler
 from core.currency.investment_state import InvestmentSelectionTracker, SelectionKind
 from core.currency.preparation import (
@@ -177,7 +177,7 @@ class SimulatedCurrency(CurrencyUtils):
     PROTAGONIST_TITLE_BOX = [700, 55, 1230, 120]
     PROTAGONIST_BANNER_BOX = [700, 845, 1260, 940]   # 红条实测 [832,883,1071,906]，框要包得住整行
     BROKEN_PANEL_ESC_GAP = 1.2
-    OVERLAP_CHECK_GAP = 2.5        # 卡死自愈的最小检查间隔，避免每帧 OCR 刷屏
+    OVERLAP_CHECK_GAP = 5.0        # 卡死自愈的最小检查间隔，避免每帧 OCR 刷屏
     MODE_SWITCH_TIMEOUT = 2.0      # 点完模式卡后等按钮文字变化的上限
     MODE_SWITCH_STEP = 0.2
     # 战斗界面上的固定文字（右下角/中央都能看到其中至少一个）
@@ -1850,6 +1850,14 @@ class SimulatedCurrency(CurrencyUtils):
         CUS_LOGGER.info("已关闭「开拓商店」")
         return 1
 
+    def _box_text (self, box):
+        """静默读某个框里的文字（OCR 糊了也不报错，识别不到就返回空串）。"""
+        try:
+            self.ts.forward(self.get_screen())
+            return normalize_name(merge_text(self.ts.find_with_box(box, redundancy=30)))
+        except Exception:
+            return ""
+
     def recover_broken_protagonist_panel (self):
         """游戏偶发 bug：商店与「选择主角」界面叠在一起时，先 ESC 关商店再 ESC 重开。
 
@@ -1864,10 +1872,17 @@ class SimulatedCurrency(CurrencyUtils):
             return 0
         self._overlap_checked_at = now
 
-        if not self.has_text(self.PROTAGONIST_BANNER_BOX,
-                             "尚未选择主角角色和光环"):
+        # 红条 OCR 经常糊（实测「尚未选据主角色和%环」）：精确优先，糊了用关键词兜底
+        if not self.click_text(text="尚未选择主角角色和光环",
+                               box=self.PROTAGONIST_BANNER_BOX,
+                               click=False, allow_fail=True, warning=False):
+            banner = self._box_text(self.PROTAGONIST_BANNER_BOX)
+            if not any(word in banner for word in ("尚未", "光环", "主角角色")):
+                return 0
+        if self.click_text(text="主角光环", box=self.PROTAGONIST_TITLE_BOX,
+                           click=False, allow_fail=True, warning=False):
             return 0
-        if self.has_text(self.PROTAGONIST_TITLE_BOX, "主角光环"):
+        if "主角光环" in self._box_text(self.PROTAGONIST_TITLE_BOX):
             return 0
 
         CUS_LOGGER.warning(
@@ -1881,13 +1896,6 @@ class SimulatedCurrency(CurrencyUtils):
         # 这里**不**推进到 exit：那会让「开始退出」再按一轮 ESC，把刚弹出来的确认框搅掉。
         # 确认框交给「重开2」（已去掉状态门槛）点「放弃并结算」。
         return 1
-
-    def has_text (self, box, text):
-        """静默判断某个区域里有没有这段文字（不打日志、不截屏之外的副作用）。"""
-        try:
-            return text in merge_text(self.ts.find_with_box(box, redundancy=30))
-        except Exception:
-            return False
 
     def select_protagonist (self):
         """4.7 新 UI「选择主角」：点按钮 → 等面板 → 拖第一个角色 → 选右侧光环 → 确认。
