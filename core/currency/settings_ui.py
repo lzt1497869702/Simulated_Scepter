@@ -16,6 +16,8 @@ from tool.storage import config_path, resource_path
 class SettingsDialog(BaseDialog):
     def __init__(self, parent=None):
         super().__init__("货币战争配置", parent)
+        available = self.screen().availableGeometry()
+        self.resize(min(900, available.width() - 80), min(720, available.height() - 100))
         self.path = config_path(__file__)
         settings = load_currency_settings(path=self.path)
         self.section = ui = self.add_section(resource_path(__file__, "ui/settings.ui"))
@@ -40,14 +42,14 @@ class SettingsDialog(BaseDialog):
         ui.Currency_difficulty_mode_combo.setCurrentIndex(
             ui.Currency_difficulty_mode_combo.findData(settings["difficulty_mode"]))
         self.affix_targets = list(settings["affix_targets"])
-        ui.Currency_affix_targets_edit.setText("、".join(self.affix_targets))
+        self._show_selection(ui.Currency_affix_targets_edit, self.affix_targets)
         ui.Currency_max_runs_spin.setValue(settings["max_runs"])
         ui.Currency_gather_mode_checkbox.setChecked(settings["gather_mode"])
 
         self.strategy_targets = list(settings["strategy_targets"])
         self.strategy_avoid = list(settings["strategy_avoid"])
-        ui.Currency_strategy_targets_edit.setText("、".join(self.strategy_targets))
-        ui.Currency_strategy_avoid_edit.setText("、".join(self.strategy_avoid))
+        self._show_selection(ui.Currency_strategy_targets_edit, self.strategy_targets)
+        self._show_selection(ui.Currency_strategy_avoid_edit, self.strategy_avoid)
         ui.Currency_auto_exit_plane_checkbox.setChecked(settings["auto_exit_plane"])
         ui.Currency_auto_clear_targets_checkbox.setChecked(settings["auto_clear_targets"])
         ui.Currency_auto_exit_plane_checkbox.toggled.connect(self._sync_exit_plane_widgets)
@@ -77,15 +79,24 @@ class SettingsDialog(BaseDialog):
     def _sync_target_buttons(self):
         """把已选数量写进按钮，让人一眼看出"点了能改什么、现在选了几个"。"""
         pairs = (
-            ("Currency_affix_targets_btn", "选择词缀…", self.affix_targets),
-            ("Currency_strategy_targets_btn", "选择目标策略…", self.strategy_targets),
-            ("Currency_strategy_avoid_btn", "选择负面策略…", self.strategy_avoid),
+            ("Currency_affix_targets_btn", "选择目标词缀", self.affix_targets),
+            ("Currency_strategy_targets_btn", "选择目标策略", self.strategy_targets),
+            ("Currency_strategy_avoid_btn", "选择负面策略", self.strategy_avoid),
         )
         for name, base, chosen in pairs:
             button = getattr(self.section, name, None)
             if button is None:
                 continue
             button.setText(f"{base}（已选 {len(chosen)}）" if chosen else base)
+
+    @staticmethod
+    def _show_selection(edit, values):
+        """只读展示框：换行显示全部已选项，固定三行高度，内容更长时框内滚动。"""
+        edit.setPlainText("、".join(values))
+        line = edit.fontMetrics().lineSpacing()
+        # 30 = 上下 qss 内边距各 10 + 边框各 1 + 文档边距各 4。不能用 frameWidth()：
+        # 构造阶段样式尚未生效，frameWidth 会偏小，导致窗口显示后行数被挤掉。
+        edit.setFixedHeight(line * 3 + 30)
 
     def open_affix_targets(self):
         """三列勾选目标词缀；取消时保持原选择。"""
@@ -94,7 +105,7 @@ class SettingsDialog(BaseDialog):
             return
         self.affix_targets = dialog.selected_affixes()
         self._sync_target_buttons()
-        self.section.Currency_affix_targets_edit.setText("、".join(self.affix_targets))
+        self._show_selection(self.section.Currency_affix_targets_edit, self.affix_targets)
 
     def persist(self):
         ui = self.section
@@ -123,7 +134,7 @@ class SettingsDialog(BaseDialog):
             return
         self.strategy_targets = dialog.selected_strategies()
         self._sync_target_buttons()
-        self.section.Currency_strategy_targets_edit.setText("、".join(self.strategy_targets))
+        self._show_selection(self.section.Currency_strategy_targets_edit, self.strategy_targets)
 
     def open_strategy_avoid(self):
         """负面策略：脚本绝不选它们。"""
@@ -136,5 +147,5 @@ class SettingsDialog(BaseDialog):
             return
         self.strategy_avoid = dialog.selected_strategies()
         self._sync_target_buttons()
-        self.section.Currency_strategy_avoid_edit.setText("、".join(self.strategy_avoid))
+        self._show_selection(self.section.Currency_strategy_avoid_edit, self.strategy_avoid)
 
