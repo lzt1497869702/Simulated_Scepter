@@ -16,6 +16,7 @@ from PyQt5.QtGui import QColor, QFont, QPainter, QPen
 from PyQt5.QtWidgets import QWidget
 
 from tool import GLOBAL
+from tool.gui.appearance import load_font_settings
 from tool.log import CUS_LOGGER
 from tool.utils.game_window import find_game_window
 
@@ -138,7 +139,7 @@ class DebugOverlay(QWidget):
         painter.fillRect(self.rect(), QColor(0, 0, 0, 0))
         painter.setCompositionMode(QPainter.CompositionMode_SourceOver)
         font = QFont()
-        font.setPixelSize(14)
+        font.setPixelSize(load_font_settings()["overlay_px"])
         painter.setFont(font)
         metrics = painter.fontMetrics()
         for mark in self.marks:

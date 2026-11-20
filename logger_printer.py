@@ -7,12 +7,13 @@ import numpy
 import numpy as np
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QColor, QTextCursor
+from PyQt5.QtGui import QColor, QFont, QTextCursor
 from PyQt5.QtWidgets import QApplication
 
 from load_ui import QMainWindowLoadUI
 from route import PATHS
 from tool import GLOBAL
+from tool.gui.appearance import load_font_settings
 
 
 class QMainWindowLog(QMainWindowLoadUI):
@@ -23,6 +24,9 @@ class QMainWindowLog(QMainWindowLoadUI):
     def __init__(self):
         # 继承父类构造方法
         super().__init__()
+
+        # 运行输出框单独放大字号；用 px 与全局字体保持一致，避免高 DPI 下被放大。
+        self.apply_log_font()
 
         # 链接防呆弹窗
         self.signal_dialog.connect(self.show_dialog)
@@ -130,11 +134,19 @@ class QMainWindowLog(QMainWindowLoadUI):
             # 处理缺省参数
             self.signal_1.emit(image_ndarray)
 
+    def apply_log_font(self):
+        """按配置应用运行输出框字号；主题切换会重置全局字体，需在此恢复。"""
+        log_font = QFont(self.TextBrowser.font())
+        log_font.setPixelSize(load_font_settings()["log_px"])
+        self.TextBrowser.setFont(log_font)
+        # QTextDocument 的默认字体独立于控件字体，不同步的话已有/新文本仍用旧字号。
+        self.TextBrowser.document().setDefaultFont(log_font)
+
     def start_print(self):
         """打印默认输出提示"""
         if self.check_model_file():
             GLOBAL.PRINT_TO_UI.emit(
-                text="您好，高级用户！！！欢迎使用ω- u13权杖系统。本系统将用于求解铁血战士计算的终点,一道完美的「毁灭」方程式……",
+                text="您好，高级用户！！！欢迎使用ω- u13权杖系统。<br>本系统将用于求解铁血战士计算的终点，一道完美的「毁灭」方程式……",
                 color_level=5,
                 time=False)
         else:
@@ -144,16 +156,19 @@ class QMainWindowLog(QMainWindowLoadUI):
                 time=False)
 
         GLOBAL.PRINT_TO_UI.emit(
-            text="如果认为本项目对您践行「毁灭」有帮助,可以为开发者于github点免费的star以表支持,或是赞助请开发者喝杯咖啡~",
+            text="如果认为本项目对您践行「毁灭」有帮助，可以为开发者于github点免费的star以表支持，或是赞助请开发者喝杯咖啡~",
             color_level=4,
             time=False)
         GLOBAL.PRINT_TO_UI.emit(
-            text="项目开源地址:https://github.com/syfoud/Simulated_Scepter 一群:1072802257（已满）二群:870863632",
+            text="项目开源地址：https://github.com/syfoud/Simulated_Scepter<br>一群：1072802257（已满）二群：870863632",
             color_level=3,
             time=False)
 
     def update_log_theme(self, theme):
         """切换语义日志颜色，同时保留已有内容、选区与滚动位置。"""
+        # 主题切换时 apply_appearance 会把全局字体重置为 interface_px，这里恢复 log_px，
+        # 顺带让 ui_fonts.toml 的改动在切主题时热生效（无需重启）。
+        self.apply_log_font()
         printer = GLOBAL.PRINT_TO_UI
         old_colors = printer.color_scheme
         printer.set_theme(theme)

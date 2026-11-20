@@ -20,6 +20,7 @@ from PyQt5.QtWidgets import (
 )
 
 from core.daily.relic_targets import INNER_TARGETS, OUTER_TARGETS
+from tool.gui.appearance import load_font_settings
 from tool.gui.settings_dialog import SettingsDialog as BaseDialog
 from tool.storage import load_module_settings, save_json_values
 
@@ -222,7 +223,7 @@ class DailyRelicSection(QWidget):
         header = QLabel("日常遗器本")
         font = QFont()
         font.setBold(True)
-        font.setPointSize(font.pointSize() + 2)
+        font.setPixelSize(load_font_settings()["daily_header_px"])
         header.setFont(font)
 
         hint = QLabel("选择刷取副本与战斗参数；内圈、外圈设置分别在下方页签维护。")

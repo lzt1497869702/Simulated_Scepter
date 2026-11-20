@@ -1,0 +1,38 @@
+# ========== 字体文件 ==========
+# resource/font 下的文件名；留空或加载失败时回退微软雅黑。
+font_file = "HarmonyOS_SansSC_Medium.ttf"
+
+# ========== 全局界面字号（px） ==========
+# 全局默认字号：所有没有单独指定字号的界面文字。
+interface_px = 17
+# 区域标题，如侧栏「运行概览」等 role="heading" 标签。
+heading_px = 19
+# 顶部选项卡标题（中控台 / 设置 / 关于）。
+tab_px = 19
+
+# 灰色次要标题，如 “识别帧率”。
+muted_px = 16
+# 性能栏里的资源数值。
+resource_value_px = 14
+# 标题栏主标题（右上角程序名）。
+window_title_px =  24
+# 标题栏版本号标签。
+version_px = 18
+# 运行状态标签。
+status_px = 16
+
+# ========== 运行输出 ==========
+# 主界面右侧「运行输出」日志框。
+log_px = 18
+
+# ========== 弹窗与浮层 ==========
+# 用户协议/免责声明弹窗标题。
+about_title_px = 19
+# 高级功能解锁弹窗标题。
+unlock_title_px = 21
+# 解锁弹窗底部按钮文字。
+dialog_note_px = 12
+# 日常遗器本设置的分区标题。
+daily_header_px = 18
+# 调试识别遮罩上的状态文字。
+overlay_px = 14

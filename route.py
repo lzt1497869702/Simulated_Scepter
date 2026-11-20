@@ -35,6 +35,8 @@ def build_paths(root):
         "logo": os.path.join(root, "resource", "logo"),
         "model": os.path.join(root, "resource", "models"),
         "ui": os.path.join(root, "resource", "ui"),
+        # 窗口外观配置（字号、字体等），随版本库分发
+        "appearance": os.path.join(root, "appearance"),
         # 临时文件
         "temp": os.path.join(root, "temp"),
         # 录制视频文件

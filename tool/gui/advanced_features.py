@@ -9,6 +9,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
+from tool.gui.appearance import load_font_settings
+
 
 def show_unlock_dialog(parent):
     """
@@ -27,7 +29,7 @@ def show_unlock_dialog(parent):
     # 标题
     title_label = QLabel("🔓 高级用户功能解锁")
     title_font = QFont()
-    title_font.setPixelSize(21)
+    title_font.setPixelSize(load_font_settings()["unlock_title_px"])
     title_font.setBold(True)
     title_label.setFont(title_font)
     title_label.setAlignment(Qt.AlignCenter)
@@ -105,8 +107,9 @@ def show_unlock_dialog(parent):
 
     github_btn = QPushButton("前往 GitHub")
     close_btn = QPushButton("关闭")
+    font_size = f"{load_font_settings()['dialog_note_px']}px"
 
-    # 设置按钮样式
+    # 按钮样式；QSS 花括号保持原样，字号用 __FONT_SIZE__ 占位后整体替换，避免 f-string 转义。
     github_btn.setStyleSheet("""
         QPushButton {
             background-color: #24292e;
@@ -114,13 +117,12 @@ def show_unlock_dialog(parent):
             padding: 10px 20px;
             border-radius: 5px;
             font-weight: bold;
-            font-size: 12px;
+            font-size: __FONT_SIZE__;
         }
         QPushButton:hover {
             background-color: #1b1f23;
         }
-    """)
-
+    """.replace("__FONT_SIZE__", font_size))
 
     close_btn.setStyleSheet("""
         QPushButton {
@@ -128,12 +130,12 @@ def show_unlock_dialog(parent):
             color: white;
             padding: 10px 20px;
             border-radius: 5px;
-            font-size: 12px;
+            font-size: __FONT_SIZE__;
         }
         QPushButton:hover {
             background-color: #5a6268;
         }
-    """)
+    """.replace("__FONT_SIZE__", font_size))
 
     button_layout.addWidget(github_btn)
     button_layout.addWidget(close_btn)

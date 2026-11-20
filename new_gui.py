@@ -37,7 +37,7 @@ from tool.cleanup import (
 from tool.debug_overlay import DebugOverlay, overlay_signal
 from tool.GLOBAL import get_global_stop_flag, set_global_stop_flag
 from tool.gui.advanced_features import show_unlock_dialog
-from tool.gui.appearance import AnimatedButton
+from tool.gui.appearance import AnimatedButton, load_font_settings
 from tool.gui.schedule_dialog import ScheduleDialog, ScheduleTimer
 from tool.gui.script_editor import ScriptEditor
 from tool.log import CUS_LOGGER, log_emitter
@@ -1707,7 +1707,7 @@ class MainWindow(QMainWindowLog):
         # 标题
         title_label = QLabel("欢迎使用模拟权杖系统")
         title_font = QFont()
-        title_font.setPixelSize(19)
+        title_font.setPixelSize(load_font_settings()["about_title_px"])
         title_font.setBold(True)
         title_label.setFont(title_font)
         title_label.setAlignment(Qt.AlignCenter)
